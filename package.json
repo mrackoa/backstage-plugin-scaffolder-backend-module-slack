@@ -8,7 +8,8 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrackoa/backstage-plugin-scaffolder-backend-module-slack.git"
+    "url": "https://github.com/mrackoa/backstage-plugin-scaffolder-backend-module-slack.git",
+    "directory": "."
   },
   "publishConfig": {
     "access": "public",
@@ -16,7 +17,9 @@
     "types": "dist/index.d.ts"
   },
   "backstage": {
-    "role": "backend-plugin-module"
+    "role": "backend-plugin-module",
+    "pluginId": "scaffolder",
+    "pluginPackage": "@backstage/plugin-scaffolder-backend"
   },
   "scripts": {
     "start": "backstage-cli package start",
