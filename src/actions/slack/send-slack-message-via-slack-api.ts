@@ -17,42 +17,46 @@ export function createSendSlackMessageViaSlackApiAction(options: {
 }) {
   const { config } = options;
 
-  return createTemplateAction<SlackActionContext>({
+  return createTemplateAction({
     id: "slack:sendMessage:conversation",
     description:
       "Sends a Slack message to a specific conversation via the Slack SDK. This requires you to install the application in your workspace and provide a token",
     schema: {
-      input: {
-        type: "object",
-        required: ["message"],
-        properties: {
-          message: {
-            title: "Message",
-            description: "The message to send via webhook",
-            type: "string",
-          },
-          conversationId: {
-            title: "Conversation ID",
-            description:
-              "The ID of the conversation to send the message to. Either this or the conversation name must be specified here or in the app configuration. If both are specified, the conversation ID will be used.",
-            type: "string",
-          },
-          conversationName: {
-            title: "Conversation Name",
-            description:
-              "The name of the conversation to send the message to. This is only used if the conversation ID is not specified.",
-            type: "string",
-          },
-          token: {
-            title: "Auth Token",
-            description:
-              "The token to use to authenticate with the Slack API. This is only used if the token is not supplied in the app configuration.",
-            type: "string",
-          },
-        },
-      },
+      input: (z) =>
+        z.object({
+          message: z
+            .string()
+            .describe("The message to send to the Slack conversation"),
+          conversationId: z
+            .string()
+            .optional()
+            .describe(
+              "The ID of the conversation to send the message to. Either this or the conversation name must be specified here or in the app configuration. If both are specified, the conversation ID will be used."
+            ),
+          conversationName: z
+            .string()
+            .optional()
+            .describe(
+              "The name of the conversation to send the message to. This is only used if the conversation ID is not specified."
+            ),
+          token: z
+            .string()
+            .optional()
+            .describe(
+              "The token to use to authenticate with the Slack API. This is only used if the token is not supplied in the app configuration."
+            ),
+        }),
+      output: (z) =>
+        z.object({
+          messageTs: z
+            .string()
+            .describe("The timestamp of the sent message"),
+          channelId: z
+            .string()
+            .describe("The ID of the channel where the message was sent"),
+        }),
     },
-    async handler(ctx: ActionContext<SlackActionContext>) {
+    async handler(ctx) {
       const token = getAndValidateSlackToken(ctx);
       const client = new WebClient(token);
 
@@ -79,6 +83,11 @@ export function createSendSlackMessageViaSlackApiAction(options: {
       if (result.error !== undefined) {
         logAndThrowError(ctx, result, conversationId);
       }
+
+      if (result.ts && result.channel) {
+        ctx.output("messageTs", result.ts);
+        ctx.output("channelId", result.channel);
+      }
     },
   });
 
@@ -101,18 +110,10 @@ export function createSendSlackMessageViaSlackApiAction(options: {
         )}`
       );
     }
-
-    const result = await client.auth.test({});
-
-    if (!result.ok) {
-      throw new InputError(
-        `The token provided does not have the correct scopes. Please ensure that the token has the following scopes: ${result.needed}`
-      );
-    }
   }
 
   function logAndThrowError(
-    ctx: ActionContext<SlackActionContext>,
+    ctx: ActionContext<any, any>,
     result: ChatPostMessageResponse,
     conversationId: string | undefined
   ) {
@@ -129,7 +130,7 @@ export function createSendSlackMessageViaSlackApiAction(options: {
 
   async function getConversationIdBasedOnChannelNameAsync(
     client: WebClient,
-    channelName: any
+    channelName: string
   ) {
     // search the Slack API for a conversation with a matching name, then return the id of that conversation
     const convo = await client.conversations.list({});
@@ -153,7 +154,7 @@ export function createSendSlackMessageViaSlackApiAction(options: {
     return channel.id;
   }
 
-  function getAndValidateSlackToken(ctx: ActionContext<SlackActionContext>) {
+  function getAndValidateSlackToken(ctx: ActionContext<any, any>) {
     const token = config.getOptionalString("slack.token") ?? ctx.input.token;
     if (!token) {
       throw new InputError(
@@ -164,7 +165,7 @@ export function createSendSlackMessageViaSlackApiAction(options: {
   }
 
   function getAndValidateConversationIdAndChannelName(
-    ctx: ActionContext<SlackActionContext>
+    ctx: ActionContext<any, any>
   ) {
     const conversationId =
       config.getOptionalString("slack.conversationId") ??
@@ -182,10 +183,3 @@ export function createSendSlackMessageViaSlackApiAction(options: {
     return { conversationId, channelName };
   }
 }
-
-type SlackActionContext = {
-  message: string;
-  conversationId?: string;
-  conversationName?: string;
-  token?: string;
-};

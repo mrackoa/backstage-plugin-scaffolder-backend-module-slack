@@ -33,22 +33,15 @@ Alternatively, there is an app manifest provided in the `slack-app-manifest.yaml
 In the root directory of your Backstage project:
 
 ```shell
-yarn add --cwd packages/backend @mdude2314/backstage-plugin-scaffolder-backend-module-slack
+yarn add --cwd packages/backend @mrackoa/backstage-plugin-scaffolder-backend-module-slack
 ```
 
-Add the actions you'd like to the scaffolder:
+Add the module to the scaffolder:
 
 ```typescript
 // packages/backend/src/index.ts
 
-import {
-  sendSlackMessageModule
-} from '@mdude2314/backstage-plugin-scaffolder-backend-module-slack'
-
-...
-
-backend.add(sendSlackMessageModule());
-
+backend.add(import('@mrackoa/backstage-plugin-scaffolder-backend-module-slack'));
 ```
 
 Add a Slack configuration section to your app-config.yaml.

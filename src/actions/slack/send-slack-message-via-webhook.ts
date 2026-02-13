@@ -13,30 +13,28 @@ export function createSendSlackMessageViaWebhookAction(options: {
 }) {
   const { config } = options;
 
-  return createTemplateAction<{
-    message: string;
-    webhookUrl?: string;
-  }>({
+  return createTemplateAction({
     id: "slack:sendMessage:webhook",
     description: "Sends a Slack message via a webhook",
     schema: {
-      input: {
-        type: "object",
-        required: ["message"],
-        properties: {
-          message: {
-            title: "Message",
-            description: "The message to send via webhook",
-            type: "string",
-          },
-          webhookUrl: {
-            title: "Webhook URL",
-            description:
-              "The webhook URL to send the request to. The URL must either be specified here or in the Backstage config",
-            type: "string",
-          },
-        },
-      },
+      input: (z) =>
+        z.object({
+          message: z
+            .string()
+            .describe("The message to send via webhook"),
+          webhookUrl: z
+            .string()
+            .optional()
+            .describe(
+              "The webhook URL to send the request to. The URL must either be specified here or in the Backstage config"
+            ),
+        }),
+      output: (z) =>
+        z.object({
+          webhookUrl: z
+            .string()
+            .describe("The webhook URL that was used to send the message"),
+        }),
     },
     async handler(ctx) {
       const webhookUrl =
@@ -65,6 +63,8 @@ export function createSendSlackMessageViaWebhookAction(options: {
           `Something went wrong while trying to send a request to the webhook URL - StatusCode ${result.status}`
         );
       }
+
+      ctx.output("webhookUrl", webhookUrl);
     },
   });
 }
