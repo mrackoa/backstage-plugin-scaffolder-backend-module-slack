@@ -32,4 +32,4 @@ export interface Config {
          */
         conversationName?: string;
     };
-};
+}
