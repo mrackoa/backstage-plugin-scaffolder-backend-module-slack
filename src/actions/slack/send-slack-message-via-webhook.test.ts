@@ -1,9 +1,8 @@
 import { PassThrough } from 'stream';
 import { createSendSlackMessageViaWebhookAction } from './send-slack-message-via-webhook';
 import * as winston from 'winston';
-import { Config, JsonObject } from '@backstage/config';
+import { Config } from '@backstage/config';
 import axios from 'axios';
-import { ActionContext } from '@backstage/plugin-scaffolder-node';
 
 jest.mock('axios');
 
@@ -36,7 +35,7 @@ describe('slack:sendMessage', () => {
           message: 'Hello, world!',
         },
         logger,
-      } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+      } as unknown as Parameters<typeof action.handler>[0]);
       throw new Error('This should not succeed');
     } catch (err: any) {
       // eslint-disable-next-line jest/no-conditional-expect
@@ -64,7 +63,7 @@ describe('slack:sendMessage', () => {
         message: 'Hello, world!',
       },
       logger,
-    } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+    } as unknown as Parameters<typeof action.handler>[0]);
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://example.com',
@@ -91,7 +90,7 @@ describe('slack:sendMessage', () => {
         webhookUrl: 'https://dontusethis.com',
       },
       logger,
-    } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+    } as unknown as Parameters<typeof action.handler>[0]);
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://example.com',
@@ -117,7 +116,7 @@ describe('slack:sendMessage', () => {
         webhookUrl: 'https://nevergonnagiveyouup.com',
       },
       logger,
-    } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+    } as unknown as Parameters<typeof action.handler>[0]);
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://nevergonnagiveyouup.com',
@@ -144,7 +143,7 @@ describe('slack:sendMessage', () => {
         webhookUrl: 'https://dontusethis.com',
       },
       logger,
-    } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+    } as unknown as Parameters<typeof action.handler>[0]);
 
     expect(axios.post).toHaveBeenCalledWith(
       'https://example.com',
@@ -173,7 +172,7 @@ describe('slack:sendMessage', () => {
           webhookUrl: 'https://dontusethis.com',
         },
         logger,
-      } as unknown as ActionContext<{ message: string; webhookUrl?: string | undefined; }, JsonObject>);
+      } as unknown as Parameters<typeof action.handler>[0]);
       expect(true).toBeFalsy(); // force the test to fail if it doesn't throw an error
     } catch (err: any) {
       // eslint-disable-next-line jest/no-conditional-expect
